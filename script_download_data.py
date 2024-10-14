@@ -429,7 +429,7 @@ def process_favorita(config):
         ' Please manually download data from Kaggle @ {}'.format(url))
 
 
-"""
+  """
   import os
   # 获取data_folder的绝对路径
   data_folder = os.path.abspath(config.data_folder)# zip文件路径
