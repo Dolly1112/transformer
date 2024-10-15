@@ -157,8 +157,8 @@ def get_default_tensorflow_config(tf_device='gpu', gpu_id=0):
 
 def save(tf_session, model_folder, cp_name, scope=None):
   """Saves Tensorflow graph to checkpoint.
-
   Saves all trainiable variables under a given variable scope to checkpoint.
+  将 TensorFlow 图和所有可训练变量保存到指定的检查点文件中。函数的设计允许用户选择是否只保存某个变量范围内的变量
 
   Args:
     tf_session: Session containing graph
@@ -168,14 +168,14 @@ def save(tf_session, model_folder, cp_name, scope=None):
   """
   # Save model
   if scope is None:
-    saver = tf.train.Saver()
+    saver = tf.train.Saver() # 创建一个 tf.train.Saver() 实例，负责保存当前会话中所有可训练变量的状态。这种情况下，所有可训练变量都会被保存。
   else:
-    var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
-    saver = tf.train.Saver(var_list=var_list, max_to_keep=100000)
+    var_list = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope) # 获取在指定范围内的所有可训练变量。
+    saver = tf.train.Saver(var_list=var_list, max_to_keep=100000) # 创建一个 tf.train.Saver 实例，并传入这些变量的列表。max_to_keep=100000 参数指定保存的检查点的最大数量，防止由于检查点数量过多而导致的问题
 
   save_path = saver.save(tf_session,
-                         os.path.join(model_folder, '{0}.ckpt'.format(cp_name)))
-  print('Model saved to: {0}'.format(save_path))
+                         os.path.join(model_folder, '{0}.ckpt'.format(cp_name))) # 格式为 model_folder/{cp_name}.ckpt
+  print('Model saved to: {0}'.format(save_path)) # 打印保存的检查点路径，以便用户确认模型已成功保存
 
 
 def load(tf_session, model_folder, cp_name, scope=None, verbose=False):
@@ -186,7 +186,7 @@ def load(tf_session, model_folder, cp_name, scope=None, verbose=False):
     model_folder: Folder containing serialised model
     cp_name: Name of Tensorflow checkpoint
     scope: Variable scope to use.
-    verbose: Whether to print additional debugging information.
+    verbose: Whether to print additional debugging information. 是否打印额外的调试信息（默认为 False）
   """
   # Load model proper
   load_path = os.path.join(model_folder, '{0}.ckpt'.format(cp_name))
@@ -195,24 +195,24 @@ def load(tf_session, model_folder, cp_name, scope=None, verbose=False):
 
   print_weights_in_checkpoint(model_folder, cp_name)
 
-  initial_vars = set(
+  initial_vars = set( # 获取当前默认图中所有变量的名称，并将其存储在 initial_vars 集合中。这些变量名称在加载前被记录，以便后续对比。
       [v.name for v in tf.get_default_graph().as_graph_def().node])
 
   # Saver
   if scope is None:
-    saver = tf.train.Saver()
-  else:
-    var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+    saver = tf.train.Saver() # 创建一个不带特定变量范围的 tf.train.Saver() 实例
+  else: # 获取在指定范围内的全局变量，并将其传递给 Saver
+    var_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope) 
     saver = tf.train.Saver(var_list=var_list, max_to_keep=100000)
   # Load
-  saver.restore(tf_session, load_path)
-  all_vars = set([v.name for v in tf.get_default_graph().as_graph_def().node])
+  saver.restore(tf_session, load_path) # 加载指定路径的模型到当前 TensorFlow 会话
+  all_vars = set([v.name for v in tf.get_default_graph().as_graph_def().node]) # 加载后，获取当前图中所有变量的名称，并将其存储在 all_vars 集合中
 
   if verbose:
-    print('Restored {0}'.format(','.join(initial_vars.difference(all_vars))))
-    print('Existing {0}'.format(','.join(all_vars.difference(initial_vars))))
-    print('All {0}'.format(','.join(all_vars)))
-
+    print('Restored {0}'.format(','.join(initial_vars.difference(all_vars)))) # Restored：加载后在当前图中缺失的变量。
+    print('Existing {0}'.format(','.join(all_vars.difference(initial_vars)))) # Existing：在当前图中存在但未在初始变量中记录的变量。
+    print('All {0}'.format(','.join(all_vars))) # All：当前图中的所有变量。
+    
   print('Done.')
 
 
