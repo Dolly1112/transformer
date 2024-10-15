@@ -59,7 +59,17 @@ class ExperimentConfig(object):
       root_folder = os.path.join(
           os.path.dirname(os.path.realpath(__file__)), '..', 'outputs')
       print('Using root folder {}'.format(root_folder))
+    """
+    os.path.realpath(__file__)：获取当前 Python 文件的绝对路径。__file__ 是 Python 中的一个特殊变量，表示当前文件的路径。
+    os.path.dirname()：获取该文件的所在目录。通过 os.path.realpath(__file__) 获取当前文件的完整路径后，os.path.dirname() 会返回该路径的目录部分。
+    '..'：表示上级目录。代码中的 os.path.join(..., '..') 将当前文件的路径向上一级。
+    'outputs'：定义了存储输出文件的文件夹名称。
+    os.path.join(...)：将所有路径片段连接在一起，最终结果是将根目录设置为当前 Python 文件的上一级目录中的一个 outputs 文件夹。
+    print(): 输出生成的默认路径，帮助用户了解程序自动选择的 root_folder。
+    """
 
+    # eg：experiment=electricity
+    # 生成outputs/data/electricity；outputs/saved_models/electricity；outputs/results/electricity
     self.root_folder = root_folder
     self.experiment = experiment
     self.data_folder = os.path.join(root_folder, 'data', experiment)
@@ -73,7 +83,7 @@ class ExperimentConfig(object):
     ]:
       if not os.path.exists(relevant_directory):
         os.makedirs(relevant_directory)
-
+ 
   @property
   def data_csv_path(self):
     csv_map = {
@@ -87,11 +97,20 @@ class ExperimentConfig(object):
 
   @property
   def hyperparam_iterations(self):
-
     return 240 if self.experiment == 'volatility' else 60
+  """
+  volatility默认进行 240 次随机搜索迭代来优化超参数。 对于其他实验，默认只需要 60 次超参数搜索迭代。
+  @property 是一个 Python 内置的装饰器，作用是将类的方法变成一个属性，从而可以像访问属性一样调用它，而不需要加括号 () 
+  eg:
+  config = ExperimentConfig(experiment='volatility')
+  print(config.hyperparam_iterations)  # 输出：240
+  eg:
+  config = ExperimentConfig(experiment='electricity')
+  print(config.hyperparam_iterations)  # 输出：60
+  """
 
   def make_data_formatter(self):
-    """Gets a data formatter object for experiment.
+    """Gets a data formatter object for experiment. 数据格式化器用于为每个实验准备和处理数据，使其适合后续的模型训练或评估。
 
     Returns:
       Default DataFormatter per experiment.
@@ -105,3 +124,8 @@ class ExperimentConfig(object):
     }
 
     return data_formatter_class[self.experiment]()
+    """
+    config = ExperimentConfig(experiment='electricity')
+    formatter = config.make_data_formatter()
+    print(type(formatter))  # 输出：<class 'data_formatters.electricity.ElectricityFormatter'>
+    """
