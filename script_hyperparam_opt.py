@@ -195,7 +195,7 @@ if __name__ == "__main__":
         choices=["yes", "no"],
         default="no",
         help="Whether to use gpu for training.")
-    parser.add_argument(
+    parser.add_argument(  # restart_hyperparam_opt 控制是否重新从头开始进行超参数优化。默认值为 "yes"，会重新运行超参数优化。
         "restart_hyperparam_opt",
         metavar="o",
         type=str,
@@ -223,8 +223,8 @@ if __name__ == "__main__":
   main(
       expt_name=name,
       use_gpu=use_tensorflow_with_gpu,
-      restart_opt=restart,
-      model_folder=os.path.join(config.model_folder, "main"),
-      hyperparam_iterations=config.hyperparam_iterations,
-      data_csv_path=config.data_csv_path,
+      restart_opt=restart # 是否从头重新开始超参数优化
+      model_folder=os.path.join(config.model_folder, "main"), # 导出：模型保存的文件夹路径
+      hyperparam_iterations=config.hyperparam_iterations, # 超参数搜索的迭代次数，依据实验名称（例如 volatility 设置为 240，其它实验设置为 60）。
+      data_csv_path=config.data_csv_path, # 导出：数据 CSV 文件的路径
       data_formatter=formatter)
