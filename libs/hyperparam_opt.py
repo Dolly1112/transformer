@@ -270,18 +270,18 @@ class DistributedHyperparamOptManager(HyperparamOptManager):
 
     max_workers = int(np.ceil(search_iterations / num_iterations_per_worker))
 
-    # Sanity checks
+    # Sanity checks # 确保每个worker都有自己的超参数集
     if worker_number > max_workers:
       raise ValueError(
           "Worker number ({}) cannot be larger than the total number of workers!"
-          .format(max_workers))
+          .format(max_workers)) 
     if worker_number > search_iterations:
       raise ValueError(
           "Worker number ({}) cannot be larger than the max search iterations ({})!"
           .format(worker_number, search_iterations))
 
     print("*** Creating hyperparameter manager for worker {} ***".format(
-        worker_number))
+        worker_number)) # 对 worker_number 进行有效性检查，确保其不超过允许的最大值
 
     hyperparam_folder = os.path.join(root_model_folder, str(worker_number))
     super().__init__(
@@ -311,7 +311,7 @@ class DistributedHyperparamOptManager(HyperparamOptManager):
   def optimisation_completed(self):
     return False if self.worker_search_queue else True
 
-  def get_next_parameters(self):
+  def get_next_parameters(self): # 从工作者搜索队列中获取下一个参数集，并将固定参数覆盖到该参数集中
     """Returns next dictionary of hyperparameters to optimise."""
     param_name = self.worker_search_queue.pop()
 
