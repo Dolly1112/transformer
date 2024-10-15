@@ -124,8 +124,8 @@ class ExperimentConfig(object):
     }
 
     return data_formatter_class[self.experiment]()
-    """
+  """
     config = ExperimentConfig(experiment='electricity')
     formatter = config.make_data_formatter()
     print(type(formatter))  # 输出：<class 'data_formatters.electricity.ElectricityFormatter'>
-    """
+  """
