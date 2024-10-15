@@ -468,7 +468,18 @@ class TemporalFusionTransformer(object):
     # Serialisation options
     self._temp_folder = os.path.join(params['model_folder'], 'tmp')
     self.reset_temp_folder()
-
+    """
+    os.path.join(params['model_folder'], 'tmp'):
+    定义一个临时文件夹的路径
+    os.path.join() 函数用于将 params['model_folder'] 和 'tmp' 连接起来，形成一个完整的文件路径。这样确保路径格式在不同操作系统上都能正确处理
+    eg: 如果 params['model_folder'] 是 ./models，那么 _temp_folder 将会是 ./models/tmp
+    
+    reset_temp_folder():
+    初始化或清空临时文件夹。
+    1. 创建临时文件夹：如果临时文件夹不存在，可能会创建它。
+    2. 清空临时文件夹：如果临时文件夹已经存在，可能会删除其中的内容，以确保每次运行都从一个干净的状态开始。
+    """
+ 
     # Extra components to store Tensorflow nodes for attention computations
     self._input_placeholder = None
     self._attention_components = None
@@ -1343,18 +1354,25 @@ class TemporalFusionTransformer(object):
 
   # Serialisation.
   def reset_temp_folder(self):
-    """Deletes and recreates folder with temporary Keras training outputs."""
-    print('Resetting temp folder...')
-    utils.create_folder_if_not_exist(self._temp_folder)
-    shutil.rmtree(self._temp_folder)
-    os.makedirs(self._temp_folder)
+    """Deletes and recreates folder with temporary Keras training outputs.
+    reset_temp_folder 方法的主要功能是确保临时文件夹在每次调用时都是干净的状态，删除任何先前的内容并重新创建它。
+    这样的设计对于 Keras 模型训练非常重要，因为在训练过程中可能会生成大量临时文件，例如模型的检查点、日志文件或缓存数据。
+    通过重置临时文件夹，可以避免旧数据干扰新的训练过程。
+    """
+    print('Resetting temp folder...') # 在控制台输出一条消息，表明正在重置临时文件夹。这有助于开发者或用户在运行代码时了解当前的操作。
+    utils.create_folder_if_not_exist(self._temp_folder) # 用于检查临时文件夹是否存在。如果文件夹不存在，函数将创建它。此时不对文件夹的内容做任何处理
+    shutil.rmtree(self._temp_folder) # 用 shutil 模块的 rmtree 方法删除临时文件夹及其所有内容。这意味着该文件夹及其中的所有文件和子文件夹都会被完全清除。
+    os.makedirs(self._temp_folder) # 在删除临时文件夹后，使用 os.makedirs 方法重新创建该临时文件夹。这个方法会确保创建的文件夹结构是完整的，即如果需要的话，会创建所有的父文件夹。
 
   def get_keras_saved_path(self, model_folder):
-    """Returns path to keras checkpoint."""
+    """Returns path to keras checkpoint.生成一个用于存储 Keras 模型检查点的文件路径
+    eg：model_folder 是 ./models  self.name 是 tft
+    then return: ./models/tft.check
+    """
     return os.path.join(model_folder, '{}.check'.format(self.name))
 
   def save(self, model_folder):
-    """Saves optimal TFT weights.
+    """Saves optimal TFT weights. 将优化后的TFT模型的权重保存到指定的文件夹
 
     Args:
       model_folder: Location to serialze model.
@@ -1363,15 +1381,18 @@ class TemporalFusionTransformer(object):
     # issue with Keras that leads to different performance evaluation results
     # when model is reloaded (https://github.com/keras-team/keras/issues/4875).
 
-    utils.save(
-        tf.keras.backend.get_session(),
-        model_folder,
-        cp_name=self.name,
-        scope=self.name)
+    utils.save(  # 调用 utils.save 函数，将当前 TensorFlow 会话的状态保存到指定的模型文件夹中
+        tf.keras.backend.get_session(), # 获取当前的 TensorFlow 会话，这个会话包含模型的所有变量和图结构
+        model_folder, # 指定保存模型的路径
+        cp_name=self.name, # 指定保存文件的名称，使用当前模型的名称
+        scope=self.name) # 指定要保存的变量范围，确保只保存与当前模型相关的变量
 
   def load(self, model_folder, use_keras_loadings=False):
-    """Loads TFT weights.
-
+    """Loads TFT weights. 从指定的文件夹加载TFT模型的权重.
+    load 方法的主要功能是根据指定的参数从给定的文件夹加载 TFT 模型的权重。
+    如果 use_keras_loadings 为 True，则从 Keras 检查点加载权重；
+    如果为 False，则使用自定义的 TensorFlow 加载方法。
+    这样设计的灵活性使得用户可以选择最适合其需求的加载方式，从而方便模型的重用和测试。
     Args:
       model_folder: Folder containing serialized models.
       use_keras_loadings: Whether to load from Keras checkpoint.
@@ -1381,9 +1402,9 @@ class TemporalFusionTransformer(object):
     """
     if use_keras_loadings:
       # Loads temporary Keras model saved during training.
-      serialisation_path = self.get_keras_saved_path(model_folder)
+      serialisation_path = self.get_keras_saved_path(model_folder) # 获取 Keras 检查点的文件路径
       print('Loading model from {}'.format(serialisation_path))
-      self.model.load_weights(serialisation_path)
+      self.model.load_weights(serialisation_path) # 从指定路径加载模型的权重
     else:
       # Loads tensorflow graph for optimal models.
       utils.load(
