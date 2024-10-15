@@ -587,7 +587,11 @@ def main(expt_name, force_download, output_folder):
   print('#### Running download script ###')
 
   expt_config = ExperimentConfig(expt_name, output_folder)
-
+  
+  """检查是否需要重新下载数据
+  如果数据文件已经存在且不强制重新下载（force_download=False），程序会打印一条消息并退出。
+  如果需要重新下载（文件不存在或 force_download=True），则会重置数据文件夹，准备下载新数据。
+  """
   if os.path.exists(expt_config.data_csv_path) and not force_download:
     print('Data has been processed for {}. Skipping download...'.format(
         expt_name))
@@ -624,21 +628,21 @@ if __name__ == '__main__':
     experiment_names = ExperimentConfig.default_experiments
 
     parser = argparse.ArgumentParser(description='Data download configs')
-    parser.add_argument(
+    parser.add_argument(  # expt_name：实验名称。它从 ExperimentConfig.default_experiments 中选择
         'expt_name',
         metavar='e',
         type=str,
         nargs='?',
         choices=experiment_names,
         help='Experiment Name. Default={}'.format(','.join(experiment_names)))
-    parser.add_argument(
+    parser.add_argument(   # output_folder：存储数据的文件夹路径。默认是当前目录（"."）。
         'output_folder',
         metavar='f',
         type=str,
         nargs='?',
         default='.',
         help='Path to folder for data download')
-    parser.add_argument(
+    parser.add_argument(  # force_download：是否强制重新下载数据，接受 'yes' 或 'no'，默认是 'no'。
         'force_download',
         metavar='r',
         type=str,
@@ -648,10 +652,26 @@ if __name__ == '__main__':
         help='Whether to re-run data download')
 
     args = parser.parse_known_args()[0]
-
+    """
+    与 parse_args() 不同，parse_known_args() 不会在遇到未知的参数（那些不在 ArgumentParser 中定义的参数）时报错，
+    而是将它们保存在一个列表中。
+    这个方法返回一个包含两个元素的元组：
+    第一个元素：解析成功的已知参数，存储在 argparse.Namespace 对象中（即 args）。
+    第二个元素：未知的参数，存储为一个列表。
+    [0]：
+    通过 [0] 索引，我们只获取元组的第一个元素，即已解析的已知参数。
+    """
+    
+    # 如果 output_folder 是 '.'，表示使用默认路径（当前目录），否则使用用户指定的路径。
     root_folder = None if args.output_folder == '.' else args.output_folder
 
     return args.expt_name, args.force_download == 'yes', root_folder
+    """
+    force_download 的默认值是 'no'，此时导致 force_download == 'yes' 为 False，不会强制重新下载
+    force_download 的值是 'yes'时，此时导致 force_download == 'yes' 为 True，会强制重新下载
+    """
 
-  name, force, folder = get_args()
-  main(expt_name=name, force_download=force, output_folder=folder)
+  name, force, folder = get_args()  # 通过 get_args() 获取用户输入的实验名称、是否强制下载、以及输出文件夹路径。
+  main(expt_name=name, force_download=force, output_folder=folder) # 调用 main 函数开始执行数据下载流程
+  # eg:
+  # python script_download_data.py electricity . no
